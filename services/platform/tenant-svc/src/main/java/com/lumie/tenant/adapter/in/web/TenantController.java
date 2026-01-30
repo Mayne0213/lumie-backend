@@ -21,6 +21,7 @@ public class TenantController {
     private final GetTenantUseCase getTenantUseCase;
     private final UpdateTenantUseCase updateTenantUseCase;
     private final DeleteTenantUseCase deleteTenantUseCase;
+    private final SuspendTenantUseCase suspendTenantUseCase;
 
     @PostMapping
     public ResponseEntity<TenantResponse> createTenant(@Valid @RequestBody CreateTenantRequest request) {
@@ -52,5 +53,19 @@ public class TenantController {
     public ResponseEntity<Void> deleteTenant(@PathVariable String slug) {
         deleteTenantUseCase.deleteTenant(slug);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{slug}/suspend")
+    public ResponseEntity<TenantResponse> suspendTenant(
+            @PathVariable String slug,
+            @RequestParam(required = false, defaultValue = "Manual suspension") String reason) {
+        TenantResponse response = suspendTenantUseCase.suspendTenant(slug, reason);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{slug}/reactivate")
+    public ResponseEntity<TenantResponse> reactivateTenant(@PathVariable String slug) {
+        TenantResponse response = suspendTenantUseCase.reactivateTenant(slug);
+        return ResponseEntity.ok(response);
     }
 }

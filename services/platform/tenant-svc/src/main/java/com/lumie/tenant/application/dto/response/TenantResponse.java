@@ -1,6 +1,7 @@
 package com.lumie.tenant.application.dto.response;
 
 import com.lumie.tenant.domain.entity.Tenant;
+import com.lumie.tenant.domain.vo.TenantPlan;
 import com.lumie.tenant.domain.vo.TenantStatus;
 import lombok.Builder;
 
@@ -13,6 +14,7 @@ public record TenantResponse(
         String name,
         String displayName,
         TenantStatus status,
+        TenantPlan plan,
         String schemaName,
         String ownerEmail,
         LocalDateTime createdAt,
@@ -25,6 +27,7 @@ public record TenantResponse(
                 .name(tenant.getName())
                 .displayName(tenant.getDisplayName())
                 .status(tenant.getStatus())
+                .plan(tenant.getPlan())
                 .schemaName(tenant.getSchemaName())
                 .ownerEmail(tenant.getOwnerEmail())
                 .createdAt(tenant.getCreatedAt())

@@ -4,6 +4,7 @@ import com.lumie.common.exception.DuplicateResourceException;
 import com.lumie.common.exception.ResourceNotFoundException;
 import com.lumie.common.util.SlugValidator;
 import com.lumie.messaging.event.TenantCreatedEvent;
+import com.lumie.messaging.event.TenantSuspendedEvent;
 import com.lumie.tenant.application.dto.request.CreateTenantRequest;
 import com.lumie.tenant.application.dto.request.UpdateTenantRequest;
 import com.lumie.tenant.application.dto.response.TenantResponse;
@@ -28,7 +29,8 @@ public class TenantApplicationService implements
         GetTenantUseCase,
         UpdateTenantUseCase,
         DeleteTenantUseCase,
-        ValidateTenantUseCase {
+        ValidateTenantUseCase,
+        SuspendTenantUseCase {
 
     private final TenantPersistencePort tenantPersistencePort;
     private final EventPublisherPort eventPublisherPort;
@@ -127,6 +129,43 @@ public class TenantApplicationService implements
         return tenantPersistencePort.findBySlug(slug)
                 .map(Tenant::getId)
                 .orElse(null);
+    }
+
+    @Override
+    @Transactional
+    public TenantResponse suspendTenant(String slug, String reason) {
+        log.info("Suspending tenant: {} with reason: {}", slug, reason);
+
+        Tenant tenant = tenantPersistencePort.findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant", slug));
+
+        tenant.suspend();
+        Tenant savedTenant = tenantPersistencePort.save(tenant);
+
+        TenantSuspendedEvent event = new TenantSuspendedEvent(
+                savedTenant.getId(),
+                savedTenant.getSlugValue(),
+                reason
+        );
+        eventPublisherPort.publish(event);
+        log.info("Published TenantSuspendedEvent for tenant: {}", slug);
+
+        return TenantResponse.from(savedTenant);
+    }
+
+    @Override
+    @Transactional
+    public TenantResponse reactivateTenant(String slug) {
+        log.info("Reactivating tenant: {}", slug);
+
+        Tenant tenant = tenantPersistencePort.findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant", slug));
+
+        tenant.reactivate();
+        Tenant savedTenant = tenantPersistencePort.save(tenant);
+
+        log.info("Tenant reactivated: {}", slug);
+        return TenantResponse.from(savedTenant);
     }
 
     private void validateSlug(String slug) {

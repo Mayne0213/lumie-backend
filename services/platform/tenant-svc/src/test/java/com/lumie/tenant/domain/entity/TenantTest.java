@@ -1,5 +1,6 @@
 package com.lumie.tenant.domain.entity;
 
+import com.lumie.tenant.domain.vo.TenantPlan;
 import com.lumie.tenant.domain.vo.TenantStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -103,5 +104,45 @@ class TenantTest {
 
         tenant.suspend();
         assertThat(tenant.isActive()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Tenant 생성 시 기본 Plan은 FREE")
+    void createTenantWithDefaultPlan() {
+        Tenant tenant = Tenant.create("test-academy", "Test Academy", null, null);
+
+        assertThat(tenant.getPlan()).isEqualTo(TenantPlan.FREE);
+        assertThat(tenant.supportsCustomDomains()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Tenant 생성 시 Plan 지정 가능")
+    void createTenantWithCustomPlan() {
+        Tenant tenant = Tenant.create("test-academy", "Test Academy", null, null, TenantPlan.PRO);
+
+        assertThat(tenant.getPlan()).isEqualTo(TenantPlan.PRO);
+        assertThat(tenant.supportsCustomDomains()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Plan 업데이트")
+    void updatePlan() {
+        Tenant tenant = Tenant.create("test-academy", "Test Academy", null, null);
+        assertThat(tenant.getPlan()).isEqualTo(TenantPlan.FREE);
+
+        tenant.updatePlan(TenantPlan.ENTERPRISE);
+
+        assertThat(tenant.getPlan()).isEqualTo(TenantPlan.ENTERPRISE);
+        assertThat(tenant.supportsCustomDomains()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Tenant 생성 시 Settings도 함께 생성됨")
+    void createTenantWithSettings() {
+        Tenant tenant = Tenant.create("test-academy", "Test Academy", null, null);
+
+        assertThat(tenant.getSettings()).isNotNull();
+        assertThat(tenant.getSettings().getTenant()).isEqualTo(tenant);
+        assertThat(tenant.getSettings().getTheme()).isEmpty();
     }
 }

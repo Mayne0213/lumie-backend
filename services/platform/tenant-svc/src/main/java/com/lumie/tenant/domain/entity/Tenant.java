@@ -1,6 +1,7 @@
 package com.lumie.tenant.domain.entity;
 
 import com.lumie.common.domain.BaseEntity;
+import com.lumie.tenant.domain.vo.TenantPlan;
 import com.lumie.tenant.domain.vo.TenantSlug;
 import com.lumie.tenant.domain.vo.TenantStatus;
 import jakarta.persistence.*;
@@ -38,23 +39,38 @@ public class Tenant extends BaseEntity {
     @Column(name = "owner_email", length = 255)
     private String ownerEmail;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "plan_id", nullable = false, length = 20)
+    private TenantPlan plan;
+
+    @OneToOne(mappedBy = "tenant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private TenantSettings settings;
+
     @Builder
-    private Tenant(TenantSlug slug, String name, String displayName, String ownerEmail) {
+    private Tenant(TenantSlug slug, String name, String displayName, String ownerEmail, TenantPlan plan) {
         this.slug = slug;
         this.name = name;
         this.displayName = displayName;
         this.ownerEmail = ownerEmail;
         this.status = TenantStatus.PENDING;
         this.schemaName = slug.toSchemaName();
+        this.plan = plan != null ? plan : TenantPlan.FREE;
     }
 
     public static Tenant create(String slug, String name, String displayName, String ownerEmail) {
-        return Tenant.builder()
+        return create(slug, name, displayName, ownerEmail, TenantPlan.FREE);
+    }
+
+    public static Tenant create(String slug, String name, String displayName, String ownerEmail, TenantPlan plan) {
+        Tenant tenant = Tenant.builder()
                 .slug(TenantSlug.of(slug))
                 .name(name)
                 .displayName(displayName)
                 .ownerEmail(ownerEmail)
+                .plan(plan)
                 .build();
+        tenant.settings = TenantSettings.createDefault(tenant);
+        return tenant;
     }
 
     public void startProvisioning() {
@@ -104,5 +120,15 @@ public class Tenant extends BaseEntity {
 
     public boolean isActive() {
         return this.status == TenantStatus.ACTIVE;
+    }
+
+    public boolean supportsCustomDomains() {
+        return this.plan != null && this.plan.supportsCustomDomains();
+    }
+
+    public void updatePlan(TenantPlan plan) {
+        if (plan != null) {
+            this.plan = plan;
+        }
     }
 }

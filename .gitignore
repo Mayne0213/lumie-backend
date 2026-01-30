@@ -1,9 +1,7 @@
 # Build outputs
 build/
-out/
+/out/
 target/
-*.jar
-*.war
 
 # Gradle
 .gradle/
