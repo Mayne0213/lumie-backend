@@ -1,0 +1,21 @@
+package com.lumie.messaging.event;
+
+import com.lumie.common.domain.AbstractDomainEvent;
+import lombok.Getter;
+
+@Getter
+public abstract class TenantEvent extends AbstractDomainEvent {
+
+    private final Long tenantId;
+    private final String slug;
+
+    protected TenantEvent(Long tenantId, String slug) {
+        super();
+        this.tenantId = tenantId;
+        this.slug = slug;
+    }
+
+    public String getRoutingKey() {
+        return String.format("tenant.%s.%s", getEventType().toLowerCase().replace("event", ""), slug);
+    }
+}
