@@ -1,10 +1,11 @@
-package com.lumie.content.infrastructure.tenant;
+package com.lumie.common.tenant;
 
-import com.lumie.common.tenant.TenantContextHolder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.springframework.stereotype.Component;
 
-@Component
+/**
+ * Hibernate multi-tenancy resolver that uses TenantContextHolder
+ * to determine the current tenant identifier.
+ */
 public class TenantIdentifierResolver implements CurrentTenantIdentifierResolver<String> {
 
     private static final String DEFAULT_TENANT = "public";
